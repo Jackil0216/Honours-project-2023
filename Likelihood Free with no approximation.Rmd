@@ -1,0 +1,86 @@
+---
+title: "Likelihood-Free Rejection Methods"
+author: "Jacky Lyu"
+date: "01/03/2023"
+output: html_document
+---
+
+```{r}
+set.seed(1)
+Yobs = rnorm(1, 0, 1) #Generate 1 observation from the true likelihood
+n = 10000
+theta_mean = runif(n, -3, 3)
+Y_samples = rnorm(n, mean = theta_mean, sd = 1)
+```
+
+#No smoothing
+```{r}
+Result_nosmooth = which(Y_samples == Yobs)
+(length(Result_nosmooth))
+```
+
+#Smoothing
+```{r}
+h = .3
+Result_smooth = which(abs(Y_samples - Yobs) < h)
+```
+
+```{r}
+if (length(Result_smooth) != 0){
+  accepted_vals_1 = Y_samples[Result_smooth]
+}
+(acceptance_rate_1 = 100*length(accepted_vals)/n)
+```
+Plot
+```{r}
+x = seq(-2, 1, length = 100)
+posterior = dnorm(x, mean=Yobs, sd=1)
+
+hist(accepted_vals_1, prob = TRUE,
+     main = "Likelihood-Free Rejection Sampling with smoothing 
+     10000 samples, h = 0.03, acceptance Rate 9.3%",
+     xlim = c(-1, 0.1), 
+     ylim = c(0, 2.5))
+lines(density(accepted_vals_1))
+lines(x, posterior, col=2)
+```
+
+##ABC
+Acceptance function that includes Gaussian kernal dunction can returns decision
+```{r}
+accept_decision <- function(y){
+  Kh = dnorm(abs(y-Yobs), 0, 1)
+  p = runif(1, 0, 1)
+  if (p<Kh) {
+    return(1)
+  } else {
+    return (0)
+  }
+}
+```
+
+#Not using Summary Statistics
+```{r}
+decision_2 = lapply(Y_samples, accept_decision) 
+accepted_vals_2 = Y_samples[which(decision_2 == 1)]
+(acceptance_rate_2 = 100*length(accepted_vals_2)/n)
+```
+
+Plot
+```{r}
+x = seq(-2, 1, length = 100)
+posterior = dnorm(x, mean=Yobs, sd=1)
+
+hist(accepted_vals_2, prob = TRUE,
+     main = "Likelihood-Free Rejection Sampling with smoothing 
+     10000 samples, Gaussian kernal, acceptance Rate 15.63%",
+     xlim = c(-3, 3), 
+     ylim = c(0, .6))
+lines(density(accepted_vals_2))
+lines(x, posterior, col=2)
+```
+# Using Summary Statistics
+```{r}
+
+```
+
